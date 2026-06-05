@@ -1,1 +1,59 @@
+# JSONPlaceholder API Testing & Request Chaining
 
+This directory contains an API test collection and environment configuration for testing REST endpoints on the JSONPlaceholder sandbox.
+
+---
+
+## 🚀 Key SQA Concepts Applied
+
+*   **Postman Environment Variables:** Utilized a dynamic environment config (`JSONPlaceholder QA.postman_environment.json`) to manage base URLs (`placeholder_url`) and capture runtime IDs.
+*   **Request Chaining:** Implemented an automated script on the `POST` request to extract the dynamically generated resource ID from the server's response and save it directly into the active environment variables (`post_id`). This value is then passed dynamically into downstream `PUT` and `DELETE` requests.
+*   **Response Schema & Array Validation:** Wrote JavaScript assertions to verify that bulk retrieval endpoints return valid arrays and are populated with active records.
+
+---
+
+## 🛠️ API Requests & Assertions Executed
+
+### 1. GET List Posts (`/posts`)
+*   **Test:** Verifies the response payload is structured as an array and contains records.
+*   **Script:**
+    ```javascript
+    pm.test("Response is an array and contains posts", function () {
+        var jsonData = pm.response.json();
+        pm.expect(jsonData).to.be.an('array');
+        pm.expect(jsonData.length).to.be.above(0);
+    });
+    ```
+
+### 2. POST Create Post (`/posts`)
+*   **Test:** Verifies a successful resource creation status (`201 Created`) and extracts the generated ID.
+*   **Script:**
+    ```javascript
+    pm.test("Status code is 201", function () {
+        pm.response.to.have.status(201);
+    });
+    var jsonData = pm.response.json();
+    pm.environment.set("post_id", jsonData.id);
+    ```
+
+### 3. PUT Update Post (`/posts/1`)
+*   **Test:** Asserts status code `200 OK` and validates that the resource properties (e.g., `"title"`) successfully update to match the payload.
+*   **Script:**
+    ```javascript
+    pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+    });
+    pm.test("Verify updated title", function () {
+        var jsonData = pm.response.json();
+        pm.expect(jsonData.title).to.eql("My SQA Journey (Updated)");
+    });
+    ```
+
+### 4. DELETE Post (`/posts/1`)
+*   **Test:** Verifies successful deletion confirmation from the server (`200 OK`).
+*   **Script:**
+    ```javascript
+    pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+    });
+    ```
